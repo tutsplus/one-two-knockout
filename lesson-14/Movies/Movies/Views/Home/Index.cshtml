@@ -1,0 +1,107 @@
+﻿<html>
+<head>
+    <title>Loading Data From the Server</title>
+    <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+    <style>
+    section {
+        background: #bbb;
+        border-radius: 6px;
+        color: #4a4a4a;
+        margin: 20px 20px;
+        padding: 20px;
+    }
+    section fieldset legend span + span {
+        float: right;
+    }
+    .hero-unit div:first-child {
+        text-align: center;
+    }
+    </style>
+</head>
+<body>
+
+    <div class="hero-unit">
+
+        <div>
+            <input data-bind="value: search, valueUpdate: 'afterkeydown'" />
+        </div>
+
+        <!-- ko foreach: filter-->
+        <section>
+
+            <fieldset>
+                <legend>
+                    <span data-bind="text: title"></span>
+                    <span data-bind="text: formattedDate()"></span>
+                </legend>
+                <label data-bind="text: openingGross"></label>
+                <span data-bind="if: cast.length > 0">
+                    <details>
+                        <summary>Cast</summary>
+                        <!-- ko foreach: cast -->
+                        <div data-bind="text: $data"></div>
+                        <!-- /ko -->
+                    </details>
+                </span>
+                <span data-bind="ifnot: cast.length > 0">
+                    <span>No cast members available yet</span>
+                </span>
+            </fieldset>
+
+        </section>
+        <!-- /ko -->
+
+    </div>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/knockout/2.2.1/knockout-min.js"></script>
+    <script>
+
+        (function () {
+
+            function Movie(movie) {
+                this.title = movie.title;
+                this.openingGross = movie.openingGross;
+                this.date = new Date(parseInt(movie.date.substr(6)));
+                this.formattedDate = function () {
+                    var day, month, year;
+                    day = this.date.getDay();
+                    month = this.date.getMonth();
+                    year = this.date.getFullYear();
+                    return day + '/' + month + '/' + year;
+                };
+                this.cast = movie.hasOwnProperty('cast') ? movie.cast : [];
+            };
+
+            function MovieViewModel(movies) {
+                var self = this;
+                self.movies = ko.observableArray(
+                    ko.utils.arrayMap(movies, function (movie) {
+                        return new Movie(movie);
+                    })
+                );
+                self.search = ko.observable('');
+                self.filter = ko.computed(function () {
+
+                    var loweredSearch = self.search().toLowerCase();
+                    if (!loweredSearch) {
+                        return self.movies();
+                    } else {
+                        return ko.utils.arrayFilter(self.movies(), function (movie) {
+                            return movie.title.toLowerCase().indexOf(loweredSearch) !== -1;
+                        });
+                    }
+
+                });
+
+            };
+
+            $.getJSON('/api', function (data) {
+                ko.applyBindings(new MovieViewModel(data));
+            });
+
+        })();
+
+    </script>
+</body>
+</html>

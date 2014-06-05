@@ -1,0 +1,168 @@
+﻿<html>
+<head>
+    <title>Saving Data to the Server</title>
+    <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+    <style>
+    section {
+        background: #bbb;
+        border-radius: 6px;
+        color: #4a4a4a;
+        margin: 20px 20px;
+        padding: 20px;
+    }
+    section fieldset legend span + span {
+        float: right;
+    }
+    .hero-unit div:first-child {
+        text-align: center;
+    }
+    </style>
+</head>
+<body>
+
+    <div class="hero-unit">
+        <h4>Add Movie</h4>
+        <div data-bind="with: movieToAdd">
+            <span>Title</span>
+            <input data-bind="value: title" />
+            <span>Opening Gross</span>
+            <input data-bind="value: openingGross" />
+            <span>Date</span>
+            <input data-bind="value: date" />
+        </div>
+
+        <div>
+            <h4>Add Cast</h4>
+            <input data-bind="value: castToAdd" />
+            <button data-bind="click: addCast" class="btn btn-mini btn-success">+</button>
+            <ul data-bind="foreach: castToAddList">
+                <li>
+                    <span data-bind="text: $data"></span>
+                    <button data-bind="click: $root.removeCast" class="btn btn-mini btn-danger">-</button>
+                </li>
+            </ul>
+        </div>
+
+        <button data-bind="click: addMovie" class="btn btn-success">Add Movie</button>
+    </div>
+
+    <div class="hero-unit">
+
+        <div>
+            <input data-bind="value: search, valueUpdate: 'afterkeydown'" />
+        </div>
+
+        <!-- ko foreach: filter-->
+        <section>
+
+            <fieldset>
+                <legend>
+                    <span data-bind="text: title"></span>
+                    <span data-bind="text: formattedDate()"></span>
+                </legend>
+                <label data-bind="text: openingGross"></label>
+                <span data-bind="if: cast.length > 0">
+                    <details>
+                        <summary>Cast</summary>
+                        <!-- ko foreach: cast -->
+                        <div data-bind="text: $data"></div>
+                        <!-- /ko -->
+                    </details>
+                </span>
+                <span data-bind="ifnot: cast.length > 0">
+                    <span>No cast members available yet</span>
+                </span>
+            </fieldset>
+
+        </section>
+        <!-- /ko -->
+
+    </div>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/knockout/2.2.1/knockout-min.js"></script>
+    <script>
+
+        (function () {
+
+            function Movie(movie) {
+                this.title = movie.title;
+                this.openingGross = movie.openingGross;
+                this.date = movie.date;
+                this.formattedDate = function () {
+                    if (this.date.indexOf("/Date") === -1) {
+                        return this.date;
+                    }
+                    this.date = new Date(parseInt(movie.date.substr(6)));
+                    var day, month, year;
+                    day = this.date.getDay();
+                    month = this.date.getMonth();
+                    year = this.date.getFullYear();
+                    return day + '/' + month + '/' + year;
+                };
+                this.cast = movie.hasOwnProperty('cast') ? movie.cast : [];
+            };
+
+            function MovieViewModel(movies) {
+                var self = this;
+                self.movies = ko.observableArray(
+                    ko.utils.arrayMap(movies, function (movie) {
+                        return new Movie(movie);
+                    })
+                );
+                self.search = ko.observable('');
+                self.filter = ko.computed(function () {
+
+                    var loweredSearch = self.search().toLowerCase();
+                    if (!loweredSearch) {
+                        return self.movies();
+                    } else {
+                        return ko.utils.arrayFilter(self.movies(), function (movie) {
+                            return movie.title.toLowerCase().indexOf(loweredSearch) !== -1;
+                        });
+                    }
+
+                });
+
+
+                self.movieToAdd = ko.observable(new Movie({
+                    title: '',
+                    openingGross: '',
+                    date: '',
+                    cast: []
+                }));
+
+                self.castToAdd = ko.observable('');
+                self.castToAddList = ko.observableArray([]);
+
+                self.addMovie = function () {
+                    var movie = new Movie(self.movieToAdd());
+                    movie.cast = self.castToAddList();
+                    $.post('/movies?json=' + ko.toJSON(movie), function (response) {
+                        self.movies.push(movie);
+                        console.log(response);
+                    });
+                };
+
+                self.addCast = function () {
+                    var cast = self.castToAdd();
+                    self.castToAddList.push(cast);
+                };
+
+                self.removeCast = function () {
+                    self.castToAddList.remove(this.toString());
+                };
+            };
+
+
+            $.getJSON('/api', function (data) {
+                ko.applyBindings(new MovieViewModel(data));
+            });
+
+
+
+        })();
+
+    </script>
+</body>
+</html>
