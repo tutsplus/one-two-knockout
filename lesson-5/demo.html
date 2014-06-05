@@ -1,0 +1,82 @@
+<html>
+<head>
+  <title>Observables</title>
+  <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+  <style>
+  #map {
+    height: 300px;
+  }
+  #map img {
+    max-width: none;
+  }
+  </style>
+</head>
+<body>
+    <div id="map">
+      
+    </div>
+    <div class="hero-unit">
+      <div data-bind="text: validationMessage, css: validationClass" class="alert">
+        
+      </div>
+      <input data-bind="value: currentLat" placeholder="Lat">
+      <input data-bind="value: currentLong" placeholder="Long">
+      <button data-bind="click: addMarker" class="btn btn-primary">Add Marker</button>
+    </div>
+
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/knockout/2.2.1/knockout-min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+    <script>
+
+    function MapViewModel(mapId, mapOptions) {
+      this.map = new google.maps.Map(document.getElementById('map'), mapOptions);
+      this.currentLat = '';
+      this.currentLong = '';
+      this.validationMessage = ko.observable('');
+      this.validationClass = ko.observable('');
+    }
+
+    MapViewModel.prototype.isValid = function(lat, long) {
+      var isValid;
+      isValid = ((lat.length > 0 && !isNaN(lat))
+              &&(long.length > 0 && !isNaN(long)));
+      console.log(isValid);
+      return isValid;
+    };
+
+    MapViewModel.prototype.addMarker = function() {
+      var isValid = this.isValid(this.currentLat, this.currentLong);
+      if (isValid) {
+        this.createMarker(this.currentLat, this.currentLong);
+        this.setCenter(this.currentLat, this.currentLong);
+        this.validationMessage('You put a map marker at ' + 
+          this.currentLat + ', ' + this.currentLong);
+        this.validationClass('alert-success');
+      } else {
+        this.validationMessage('You put in bad data');
+        this.validationClass('alert-error');
+      }
+    };
+
+    MapViewModel.prototype.createMarker = function(lat, long) {
+      return new google.maps.Marker({
+        position: new google.maps.LatLng(lat, long),
+        map: this.map
+      });
+    };
+
+    MapViewModel.prototype.setCenter = function(lat, long) {
+      this.map.setCenter(new google.maps.LatLng(lat, long));
+    };
+
+    var mapVm = new MapViewModel('map', {
+        zoom: 8,
+        center: new google.maps.LatLng(-34.397, 150.644),
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    });
+
+    ko.applyBindings(mapVm);
+
+    </script>
+</body>
+</html>

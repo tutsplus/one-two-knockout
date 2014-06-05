@@ -1,0 +1,65 @@
+<html>
+<head>
+  <title>Subscriptions</title>
+  <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+</head>
+<body>
+
+  <div class="hero-unit">
+    <p>
+      Name:
+      <input data-bind="value: name" />
+      <span data-bind="text: name.validationMessage, css: name.validationClass"></span>
+    </p>
+    <p>
+      Age:
+      <input data-bind="value: age" />
+      <span data-bind="text: age.validationMessage, css: age.validationClass"></span>
+    </p>
+  </div>
+
+<script src="http://cdnjs.cloudflare.com/ajax/libs/knockout/2.2.1/knockout-min.js"></script>
+<script>  
+
+(function() {
+
+  function PersonViewModel () {
+
+    var self = this;
+
+    this.name = ko.observable();
+    this.name.validationMessage = ko.observable();
+    this.name.validationClass = ko.observable();
+    this.name.subscribe(function() {
+      var nameValue = self.name(),
+        message = nameValue.length > 0 ? 'Good!' : 'Please enter your name',
+        cssClass = nameValue.length > 0 ? 'alert-success' : 'alert-error';
+
+      self.name.validationMessage(message);
+      self.name.validationClass(cssClass);
+
+    });
+
+    this.age = ko.observable();
+    this.age.validationMessage = ko.observable();
+    this.age.validationClass = ko.observable();
+    this.age.subscribe(function() {
+
+      var ageValue = self.age(),
+        message = (self.age().length > 0 && !isNaN(ageValue)) ? 'Good!' : 'Please enter a valid number',
+        cssClass = (self.age().length > 0 &&!isNaN(ageValue)) ? 'alert-success' : 'alert-error';
+
+      self.age.validationMessage(message);
+      self.age.validationClass(cssClass);
+
+    });
+
+  };
+
+  ko.applyBindings(new PersonViewModel());
+
+})();
+
+</script>
+</body>
+</html>

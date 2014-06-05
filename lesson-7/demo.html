@@ -1,0 +1,166 @@
+<html>
+<head>
+  <title>Models</title>
+  <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+  <style>
+  #map {
+    height: 300px;
+  }
+  #map img {
+    max-width: none;
+  }
+  select {
+    margin: 0;
+  }
+  </style>
+</head>
+<body>
+    <div id="map">
+      
+    </div>
+    <div class="hero-unit">
+      <div data-bind="text: validationMessage, css: validationClass" class="alert">
+        
+      </div>
+      <input data-bind="value: placeToAdd" placeholder="Search">
+      <button data-bind="click: search" class="btn btn-primary">Add Marker</button>
+      <button data-bind="click: deleteMarkers" class="btn btn-danger">Delete All</button>
+      <select data-bind="options: searchHistory, optionsText: 'place'"></select>
+    </div>
+
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/knockout/2.2.1/knockout-min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+    <script>
+
+    var CacheStatus = {
+      NA: 0,
+      MARKER: 1,
+      HISTORY: 2
+    };
+
+    function CacheCheck(search, status) {
+      this.search = search;
+      this.status = status;
+    }
+
+    function Search(place, location) {
+      this.place = place;
+      this.location = location;
+    }
+
+    function MapViewModel(mapId, mapOptions) {
+      this.map = new google.maps.Map(document.getElementById('map'), mapOptions);
+      this.geocoder = new google.maps.Geocoder();
+      this.currentLat = '';
+      this.currentLong = '';
+      this.validationMessage = ko.observable('');
+      this.validationClass = ko.observable('');
+      this.placeToAdd = '';
+      this.searchHistory = ko.observableArray([]);
+      this.markers = [];
+    }
+
+    MapViewModel.prototype.deleteMarkers = function() {
+      var markerLength = this.markers.length - 1;
+      while(markerLength>=0) {
+        var marker = this.markers[markerLength];
+        marker.setMap(null);
+        this.markers.pop();
+        markerLength--;
+      }
+    };
+
+    MapViewModel.prototype.findPlace = function(place) {
+      return ko.utils.arrayFirst(this.searchHistory(), function(search) {
+        return search.place.toLowerCase() === place.toLowerCase();
+      });
+    };
+
+    MapViewModel.prototype.findMarker = function(location) {
+      return ko.utils.arrayFirst(this.markers, function(marker) {
+        return (marker.position.lat() === location.lat() 
+          && marker.position.lng() === location.lng());
+      });
+    };
+
+    MapViewModel.prototype.checkCache = function() {
+
+      var cacheStatus = CacheStatus.NA,
+        place = this.placeToAdd,
+        searchedPlace;
+
+      // check for markers
+      searchedPlace = this.findPlace(place);
+      if (searchedPlace) {
+        var marker = this.findMarker(searchedPlace.location);
+        cacheStatus = marker ? CacheStatus.MARKER : CacheStatus.HISTORY;
+      }
+
+      return new CacheCheck(searchedPlace, cacheStatus);
+
+    };
+
+    MapViewModel.prototype.search = function() {
+
+      var cacheCheck = this.checkCache();
+      switch(cacheCheck.status) 
+      {
+        case CacheStatus.NA:
+          console.log('Fresh lookup');
+          this.locate();
+          break;
+        case CacheStatus.MARKER:
+          console.log('Center set to existing marker');
+          this.setCenter(cacheCheck.search.location);
+          break;
+        case CacheStatus.HISTORY:
+          console.log('Marker added from history');
+          var marker = this.createMarker(cacheCheck.search.location);
+          this.setCenter(cacheCheck.search.location);
+          this.markers.push(marker);
+          break;
+      }
+
+    };
+
+    MapViewModel.prototype.locate = function() {
+      var self = this;
+      self.geocoder.geocode( { 'address': self.placeToAdd }, function(results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+          var location = results[0].geometry.location;
+          self.setCenter(location);
+          var marker = self.createMarker(location);
+          self.validationMessage('You put a map marker at ' + 
+          location.lat() + ', ' + location.lng());
+          self.validationClass('alert-success');
+          self.searchHistory.push(new Search(self.placeToAdd, location));
+          self.markers.push(marker);
+        } else {
+          self.validationMessage('You put in bad data');
+          self.validationClass('alert-error');
+        }
+      });
+    };
+
+    MapViewModel.prototype.createMarker = function(position) {
+      return new google.maps.Marker({
+        position: position,
+        map: this.map
+      });
+    };
+
+    MapViewModel.prototype.setCenter = function(position) {
+      this.map.setCenter(position);
+    };
+
+    var mapVm = new MapViewModel('map', {
+        zoom: 8,
+        center: new google.maps.LatLng(-34.397, 150.644),
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    });
+
+    ko.applyBindings(mapVm);
+
+    </script>
+</body>
+</html>

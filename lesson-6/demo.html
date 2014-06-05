@@ -1,0 +1,98 @@
+<html>
+<head>
+	<title>Observable Arrays</title>
+	<link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+	<style>
+	#map {
+		height: 400px;
+	}
+	#map img {
+		max-width: none;
+	}
+  .hero-unit {
+    min-height: 1px;
+  }
+  fieldset {
+    display: inline-block;
+    margin: 0 40px;
+  }
+  select {
+    margin: 0;
+  }
+  .alert-container {
+    height: 50px;
+  }
+	</style>
+</head>
+<body>
+
+<div id="map"></div>
+    <div class="hero-unit">
+      <div data-bind="text: validationMessage, css: validationClass" class="alert">
+        
+      </div>
+      <input data-bind="value: placeToAdd" placeholder="Search">
+      <button data-bind="click: search" class="btn btn-primary">Add Marker</button>
+      <select data-bind="options: searchHistory, optionsText: 'place'"></select>
+    </div>
+
+<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/knockout/2.2.1/knockout-min.js"></script>
+<script>
+
+  function MapViewModel(mapId, mapOptions) {
+
+    this.markers = [];
+    this.places = ko.observableArray();
+
+  	this.validationMessage = ko.observable('');
+  	this.validationClass = ko.observable('');
+
+  	this.map = new google.maps.Map(document.getElementById(mapId), mapOptions);
+    this.geocoder = new google.maps.Geocoder();
+
+    this.placeToAdd = '';
+
+  };
+
+  MapViewModel.prototype.locate = function() {
+    var self = this;
+    self.geocoder.geocode( { 'address': self.placeToAdd }, function(results, status) {
+      if (status == google.maps.GeocoderStatus.OK) {
+        var location = results[0].geometry.location,
+          marker = self.createMarker(location, self.map);
+        self.setCenter(location);
+        self.markers.push(marker);
+        self.places.push(self.placeToAdd);
+        self.validationMessage(self.placeToAdd + ' added!');
+        self.validationClass("alert-success");
+      } else {
+        self.validationMessage('You put in bad data');
+        self.validationClass("alert-error");
+      }
+    });
+  };
+
+
+  MapViewModel.prototype.createMarker = function(location, map) {
+  	return new google.maps.Marker({
+  		position: location,
+  		map: map
+  	});
+  };
+
+  MapViewModel.prototype.setCenter = function(location) {
+  	this.map.setCenter(location);
+  };
+
+  var mapVm = new MapViewModel('map', {
+    zoom: 8,
+    center: new google.maps.LatLng(-34.397, 150.644),
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+  });
+
+  ko.applyBindings(mapVm);
+
+</script>
+</body>
+</html>

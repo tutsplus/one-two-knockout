@@ -1,0 +1,62 @@
+<html>
+<head>
+	<title>$ vs. ko</title>
+	<link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+	<style>
+		select{
+			margin:0;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+
+		<div class="hero-unit">
+			<h2>Wish List</h2>
+			<ol id="wish-list">
+
+			</ol>
+			
+			<input id="wish-item" place-holder="Item" />
+
+			<select id="wish-desire-level">
+				<option></option>
+
+			</select>
+			<button id="button-add" class="btn btn-primary">Add</button>
+
+		</div>
+
+	</div>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+	<script>
+
+		// Load desire levels from the fake server
+		var fakeServerData = ["", "Really Want", "Kinda Want"],
+			$level = $('#wish-desire-level');
+
+		$.each(fakeServerData, function(key, text){
+			$level.append($("<option>", {
+				text: text
+			}));
+
+		});
+
+		// Add wish on the button click
+
+		$('#button-add').on('click', function() {
+
+			// 1. Go to space - Really Want
+			// 2. Eat some pie - Kinda Want
+
+			var $item = $('#wish-item'),
+				$list = $('#wish-list');
+
+			$list.append($("<li>", {
+				text: $item.text() + ' - ' + $level.children(":selected").text()
+			}));
+
+		});
+	</script>
+</body>
+</html>

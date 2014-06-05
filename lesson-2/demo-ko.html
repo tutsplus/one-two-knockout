@@ -1,0 +1,46 @@
+<html>
+<head>
+  <title>$ vs. ko</title>
+  <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+  <style>
+    select{
+      margin:0;
+    }
+  </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero-unit">
+            <h2>Wish List</h2>
+
+            <ol data-bind="foreach: wishes" id="wish-list">
+              <li data-bind="text: $data"></li>
+            </ol>
+            
+            <input data-bind="value: currentWish" id="wish-item" place-holder="Item" />
+            <select data-bind="options: fakeServerData, value: currentLevel" id="wish-desire-level">
+
+            </select>
+            <button data-bind="click: addWish" id="button-add" class="btn btn-primary">Add</button>
+        </div>
+    </div>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/knockout/2.2.1/knockout-min.js"></script>
+    <script>
+
+    var ViewModel = function() {
+      this.fakeServerData = ['Really Want', 'Kinda Want'];
+      this.wishes = ko.observableArray([]);
+      this.currentWish = ko.observable('');
+      this.currentLevel = ko.observable('');
+      this.addWish = function() {
+        var itemText = this.currentWish() + ' - ' + this.currentLevel();
+        this.wishes.push(itemText);
+        console.log(this.wishes());
+      };
+    };
+
+    ko.applyBindings(new ViewModel());
+
+    </script>
+</body>
+</html>

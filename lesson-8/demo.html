@@ -1,0 +1,46 @@
+<html>
+<head>
+  <title>Computed Observables</title>
+  <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+</head>
+<body>
+
+  <div class="hero-unit">
+    <input data-bind="value: first" />
+    <input data-bind="value: last" />
+    <p data-bind="visible: fullNameIsVisible">
+      <label for="">Full Name:</label>
+      <span data-bind="text: fullName"></span>
+    </p>
+  </div>
+
+<script src="http://cdnjs.cloudflare.com/ajax/libs/knockout/2.2.1/knockout-min.js"></script>
+<script>
+
+(function() {
+
+  function PersonViewModel() {
+
+    this.first = ko.observable('');
+    this.last = ko.observable('');
+
+    this.fullName = ko.computed(function() {
+      var full = this.first() + ' ' + this.last();
+      console.log(full);
+      return full;
+    }, this);
+
+    this.fullNameIsVisible = ko.computed(function() {
+
+      return this.fullName().length > 1;
+
+    }, this);
+  };
+
+  ko.applyBindings(new PersonViewModel());
+
+})();
+
+</script>
+</body>
+</html>

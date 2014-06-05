@@ -1,0 +1,37 @@
+<html>
+<head>
+  <title>The View Model</title>
+  <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+</head>
+<body>
+    
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/knockout/2.2.1/knockout-min.js"></script>
+    <script>
+
+    var vm = {
+      name: 'Thomas'
+    };
+
+    vm.prototype.sayHello = function() {
+      alert('Hello ' + vm.name);
+    };
+
+    var vm2 = function() {
+      this.name = 'Thomas';
+    };
+
+    vm2.prototype.sayHello = function() {
+      alert('Hello' + this.name);
+    };
+
+    // ko.applyBindings(vm);
+    // ko.applyBindings(new vm2());
+
+    // console.log(vm);
+    // console.log(new vm2());
+
+    console.log(new vm2().sayHello === new vm2().sayHello);
+
+    </script>
+</body>
+</html>
